@@ -1,9 +1,10 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+from models.user import User
 from dotenv import load_dotenv
+from database import db
 import os
 
-load_dotenv("env")
+load_dotenv(".env")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -11,7 +12,10 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SECRET_KEY'] = SECRET_KEY
-db = SQLAlchemy(app)
+
+db.init_app(app)
+
+# Session <- conexâo ativa
 
 @ app.route('/hello-world', methods=['GET'])
 def principal():
@@ -19,3 +23,4 @@ def principal():
 
 if __name__ == "__main__":
     app.run(debug=True, port = 5000)
+
