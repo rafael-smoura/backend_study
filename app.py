@@ -30,7 +30,6 @@ def login():
     data = request.json
     username = data.get('username')
     password = data.get('password')
-
     if username and password:
         user = User.query.filter_by(username=username).first()
     
@@ -38,10 +37,13 @@ def login():
                 login_user(user)
                 print(current_user.is_authenticated)
                 return jsonify({"message": "autenticação realizada com sucesso!"}), 200
-    
     return jsonify({"message": "Credenciais inválidas"}), 400
 
-
+@app.route('logou', methods=['GET'])
+def logout():
+     pass
+     # TODO logou
+     
 @ app.route('/hello-world', methods=['GET'])
 def principal():
     return "OLá mundo"
