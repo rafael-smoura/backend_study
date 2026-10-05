@@ -45,7 +45,7 @@ def logout():
     logout_user()
     return jsonify({"message": "Logout realizado com sucesso"})
 
-@app.route('/user', methods=['POST'])
+@app.route('/create_user', methods=['POST'])
 def create_user():
     data = request.json
     username = data.get("username")
@@ -59,7 +59,19 @@ def create_user():
 
     return jsonify({"message": "Credenciais Inválidas"}), 401
 
-         
+@app.route('/user/<int:id_user>', methods=['GET'])
+@login_required
+def read_user(id_user)-> str:
+    user = User.query.get(id_user)
+    if user:
+         return {"username": user.username}
+    
+    return jsonify({"message": "Usuário não encontrado"}), 404
+       
+
+
+     
+     
 @app.route('/hello-world', methods=['GET'])
 def principal():
     return "OLá mundo"
