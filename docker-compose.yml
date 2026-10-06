@@ -1,0 +1,32 @@
+
+services:
+  # Servicio 1: Banco de Dados MySQL
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_USER: ${MYSQL_USER:-admin}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-admin123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-flask-crud}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-admin123}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # Servicio 2: Sua API Flask (Backend)
+  backend:
+    build: .
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      # Sobrescreve a URL do banco apenas dentro do Docker para usar o host 'db'
+      - DATABASE_URL=mysql+pymysql://${MYSQL_USER:-admin}:${MYSQL_PASSWORD:-admin123}@db:3306/${MYSQL_DATABASE:-flask-crud}
+    depends_on:
+      - db
+
+# Volume persistente para os dados do MySQL no Windows
+volumes:
+  mysql_data:
