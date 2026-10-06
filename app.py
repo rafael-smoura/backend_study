@@ -3,12 +3,12 @@ from models.user import User
 from dotenv import load_dotenv
 from database import db
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
-import os
+from os import getenv
 
 load_dotenv(".env")
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-SECRET_KEY = os.getenv("SECRET_KEY")
+DATABASE_URL = getenv("DATABASE_URL")
+SECRET_KEY = getenv("SECRET_KEY")
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
@@ -61,17 +61,38 @@ def create_user():
 
 @app.route('/user/<int:id_user>', methods=['GET'])
 @login_required
-def read_user(id_user)-> str:
+def read_user(id_user):
     user = User.query.get(id_user)
     if user:
          return {"username": user.username}
     
     return jsonify({"message": "Usuário não encontrado"}), 404
-       
 
+@app.route('/user/<int:id_user>', methods=['PUT'])
+@login_required
+def update_user(id_user):
+    data = request.json
+    user = User.query.get(id_user)
 
-     
-     
+    if user and data.get("passowrd"):
+         user.password = data.get('password')
+         db.session.commit()
+
+         return jsonify({"message": f"Usuário {id_user} atualizado com sucesso"})
+    
+    return jsonify({"message": "Usuário não encontrado"}), 404
+
+@app.route('/user/<int:id_user>', methods=['DELETE'])
+@login_required
+def delete_user(id_user):
+    user = User.query.get(id_user)
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({"message": f"Usuário {id_user} removido com sucesso"})
+    
+    return jsonify({"message": "Usuário não encontrado"}), 4
+
 @app.route('/hello-world', methods=['GET'])
 def principal():
     return "OLá mundo"
