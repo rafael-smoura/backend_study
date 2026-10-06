@@ -87,11 +87,19 @@ def update_user(id_user):
 def delete_user(id_user):
     user = User.query.get(id_user)
     if user:
+        is_self_deletion = (current_user.id == user.id)
+
+        if not is_self_deletion and not current_user.is_admin:
+            return jsonify({"message": "Apenas administradores podem deletar outros usuários"}), 403
+        
         db.session.delete(user)
         db.session.commit()
-        return jsonify({"message": f"Usuário {id_user} removido com sucesso"})
-    
-    return jsonify({"message": "Usuário não encontrado"}), 4
+
+        if is_self_deletion:
+            logout_user()
+
+        return jsonify({"message": f"Usuário {id_user} removido com sucesso"}), 200
+    return jsonify({"message": "Usuário não encontrado"}), 404
 
 @app.route('/hello-world', methods=['GET'])
 def principal():
