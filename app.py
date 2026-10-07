@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from database import db
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
 from os import getenv
+import bcrypt
 
 load_dotenv(".env")
 
@@ -22,7 +23,6 @@ login_manager.init_app(app)
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Trata tentativas de acesso não autorizado em rotas protegidas
 @login_manager.unauthorized_handler
 def unauthorized():
     return jsonify({"message": "Não autorizado. Faça login para acessar este recurso."}), 401
@@ -35,7 +35,7 @@ def login():
     if username and password:
         user = User.query.filter_by(username=username).first()
     
-        if user and user.password == password:
+        if user and bcrypt.checkpw(str.encode(password), str.encode(user.password)):
             login_user(user)
             print(current_user.is_authenticated)
             return jsonify({"message": "autenticação realizada com sucesso!"}), 200
@@ -54,7 +54,9 @@ def create_user():
     password = data.get("password")
 
     if username and password:
-        user = User(username=username, password=password, role='user')
+        hashed_password = bcrypt.hashpw(str.encode(password), bcrypt.gensalt(14)).decode('utf-8')
+
+        user = User(username=username, password=hashed_password, role='user')
         db.session.add(user)
         db.session.commit()
         return jsonify({"message": "Usuário Cadastrado com Sucesso!"}), 201
@@ -87,7 +89,10 @@ def update_user(id_user):
         return jsonify({"message": "Operação não permitida"}), 403
 
     if data.get("password"):
-        user.password = data.get('password')
+        raw_password = data.get("password")
+        hashed_password = bcrypt.hashpw( raw_password.encode('utf-8'), bcrypt.gensalt())
+                                       
+        user.password = hashed_password.decode('utf-8')
         db.session.commit()
         return jsonify({"message": f"Usuário {id_user} atualizado com sucesso"}), 200
 
@@ -112,7 +117,7 @@ def delete_user(id_user):
         return jsonify({"message": f"Usuário {id_user} removido com sucesso"}), 200
     return jsonify({"message": "Usuário não encontrado"}), 404
 
-@app.route('/hello-world', methods=['GET'])
+@app.route('/', methods=['GET'])
 def principal():
     return "OLá mundo"
 
